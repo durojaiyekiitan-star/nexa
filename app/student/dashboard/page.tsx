@@ -103,7 +103,7 @@ export default function StudentDashboard() {
 
       const withContributions = (goalsData ?? []).map((g) => ({
         ...g,
-        contributions: contributionsData.filter((c) => c.goal_id === g.id),
+        contributions: contributionsData.filter((c) => (c as any).goal_id === g.id),
       }));
       withContributions.sort(
         (a, b) => getPercentFunded(b.amount_raised, b.amount_needed) - getPercentFunded(a.amount_raised, a.amount_needed)
