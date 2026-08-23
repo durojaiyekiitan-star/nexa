@@ -60,6 +60,9 @@ export default function LoginPage() {
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-purple-300/40 focus:border-cyan-400/50 outline-none"
               placeholder="Your password"
             />
+            <a href="/forgot-password" className="text-xs text-cyan-300/70 hover:text-cyan-300 underline mt-1.5 inline-block">
+              Forgot password?
+            </a>
           </div>
 
           {error && <p className="text-sm text-red-300">{error}</p>}

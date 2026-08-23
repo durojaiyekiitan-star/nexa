@@ -39,46 +39,27 @@ export default function SignupPage() {
     setIsSubmitting(true);
     const supabase = createClient();
 
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+    // Profile + role-specific rows are now created automatically by a DB
+    // trigger in the same transaction as the account itself — no separate
+    // insert steps that could fail halfway through.
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role,
+          first_name: firstName.trim(),
+          middle_name: middleName.trim() || null,
+          last_name: lastName.trim(),
+          country: country || null,
+          ilp_wallet_address: walletAddress.trim() ? normalizeWalletAddress(walletAddress) : null,
+        },
+      },
+    });
     if (signUpError || !data.user) {
       setError(signUpError?.message || "Failed to create account");
       setIsSubmitting(false);
       return;
-    }
-
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user.id,
-      role,
-      first_name: firstName.trim(),
-      middle_name: middleName.trim() || null,
-      last_name: lastName.trim(),
-      country: country || null,
-      ilp_wallet_address: walletAddress.trim() ? normalizeWalletAddress(walletAddress) : null,
-    });
-    if (profileError) {
-      setError(profileError.message);
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (role === "student") {
-      const { error: studentError } = await supabase
-        .from("student_profiles")
-        .insert({ profile_id: data.user.id, skills: [], interests: [], goal: null });
-      if (studentError) {
-        setError(studentError.message);
-        setIsSubmitting(false);
-        return;
-      }
-    } else if (role === "sponsor") {
-      const { error: sponsorError } = await supabase
-        .from("sponsor_profiles")
-        .insert({ profile_id: data.user.id, interests: [] });
-      if (sponsorError) {
-        setError(sponsorError.message);
-        setIsSubmitting(false);
-        return;
-      }
     }
 
     if (role === "student") router.push("/assessment");
