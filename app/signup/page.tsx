@@ -27,6 +27,8 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   const walletRequired = role === "student" || role === "sponsor";
   const walletValid = !walletRequired || isValidWalletInput(walletAddress.trim());
@@ -62,11 +64,59 @@ export default function SignupPage() {
       return;
     }
 
+    // With email confirmation ON, signUp() succeeds but returns no active
+    // session yet — the account only becomes usable once the link is
+    // clicked. Without a session, there's nowhere to redirect to.
+    if (!data.session) {
+      setAwaitingConfirmation(true);
+      setIsSubmitting(false);
+      return;
+    }
+
     if (role === "student") router.push("/assessment");
     else if (role === "sponsor") router.push("/sponsor/dashboard");
     else router.push("/organization");
     router.refresh();
   };
+
+  const handleResend = async () => {
+    setIsSubmitting(true);
+    setResendMessage("");
+    const supabase = createClient();
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email });
+    setResendMessage(resendError ? resendError.message : "Confirmation email resent.");
+    setIsSubmitting(false);
+  };
+
+  if (awaitingConfirmation) {
+    return (
+      <main className="min-h-screen relative z-10 px-6 py-12 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(139,92,246,0.15)] p-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center text-2xl mx-auto mb-4">
+            ✉️
+          </div>
+          <h1 className="text-xl font-bold text-white mb-2">Check your email</h1>
+          <p className="text-sm text-purple-200/60 mb-1">
+            We&apos;ve sent a confirmation link to <span className="text-white font-medium">{email}</span>.
+          </p>
+          <p className="text-sm text-purple-200/60 mb-6">Click it to activate your account, then come back and log in.</p>
+          <button
+            onClick={handleResend}
+            disabled={isSubmitting}
+            className="text-sm text-cyan-300 hover:text-cyan-200 underline disabled:opacity-50"
+          >
+            {isSubmitting ? "Resending..." : "Resend confirmation email"}
+          </button>
+          {resendMessage && <p className="text-sm text-purple-200/60 mt-3">{resendMessage}</p>}
+          <p className="text-sm text-purple-300/50 mt-6">
+            <a href="/login" className="text-cyan-300 underline">
+              Back to log in
+            </a>
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen relative z-10 px-6 py-12 flex items-center justify-center">

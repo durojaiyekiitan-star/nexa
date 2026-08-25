@@ -7,16 +7,22 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const handleSubmit = async () => {
-    if (!email) return;
+    if (!email || sent) return;
     setIsSubmitting(true);
     setMessage("");
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    setMessage(error ? error.message : "If an account exists for that email, a reset link has been sent.");
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setSent(true);
+      setMessage("If an account exists for that email, a reset link has been sent.");
+    }
     setIsSubmitting(false);
   };
 
@@ -33,17 +39,27 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-purple-300/40 focus:border-cyan-400/50 outline-none"
+              disabled={sent}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-purple-300/40 focus:border-cyan-400/50 outline-none disabled:opacity-50"
               placeholder="you@example.com"
             />
           </div>
-          {message && <p className="text-sm text-purple-200/70">{message}</p>}
+          {message && (
+            <p className={`text-sm ${sent ? "text-emerald-300" : "text-purple-200/70"}`}>
+              {sent && "✓ "}
+              {message}
+            </p>
+          )}
           <button
             onClick={handleSubmit}
-            disabled={!email || isSubmitting}
-            className="w-full bg-gradient-to-r from-indigo-500 to-violet-500 disabled:from-white/10 disabled:to-white/10 disabled:text-purple-300/40 text-white font-medium rounded-lg py-2.5 transition-all hover:from-indigo-400 hover:to-violet-400 shadow-[0_0_20px_rgba(139,92,246,0.4)] disabled:shadow-none"
+            disabled={!email || isSubmitting || sent}
+            className={`w-full font-medium rounded-lg py-2.5 transition-all shadow-[0_0_20px_rgba(139,92,246,0.4)] disabled:shadow-none ${
+              sent
+                ? "bg-emerald-500/20 text-emerald-200 border border-emerald-400/30"
+                : "bg-gradient-to-r from-indigo-500 to-violet-500 disabled:from-white/10 disabled:to-white/10 disabled:text-purple-300/40 text-white hover:from-indigo-400 hover:to-violet-400"
+            }`}
           >
-            {isSubmitting ? "Sending..." : "Send reset link"}
+            {sent ? "Link sent ✓" : isSubmitting ? "Sending..." : "Send reset link"}
           </button>
           <p className="text-sm text-purple-300/50 text-center">
             <a href="/login" className="text-cyan-300 underline">
