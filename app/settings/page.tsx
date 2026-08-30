@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { COUNTRIES } from "@/lib/constants/countries";
+import CountrySelect from "@/components/CountrySelect";
 import WalletSetupGuide from "@/components/WalletSetupGuide";
 import { isValidWalletInput, normalizeWalletAddress } from "@/lib/utils/wallet";
 
@@ -162,18 +162,7 @@ export default function SettingsPage() {
           </div>
           <div className="mb-4">
             <label className="text-sm font-medium text-purple-100 mb-1 block">Country</label>
-            <select
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white [&>option]:bg-[#1A0B36]"
-            >
-              <option value="">Select a country...</option>
-              {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <CountrySelect value={country} onChange={setCountry} />
           </div>
           <button
             onClick={saveDetails}
